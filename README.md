@@ -6,6 +6,8 @@
 
 `Connection.js` is a new way of socket communication. It automatically converts sockets into user profiles and helps developer to associate personal data with each connected user. Also, `Connection.js` simplifies socket networking by asynchronous callbacks. The library is built on top of [socket.io](https://socket.io).
 
+**Important note.** This is a client-side of `Connection` library. For server-side solution, take a look at [Node.js version](https://github.com/igormatyushkin014/Connection-for-Node).
+
 ## How to Get Started
 
 Copy [connection.js](connection.js) file to your project. Then add scripts to your HTML document:
