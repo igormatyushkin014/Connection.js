@@ -48,23 +48,17 @@ const connection = new Connection({
 
 In `socket.io`, every message sent between client and server includes event name and (optionally) some data. In `Connection` library, we use a different way of communication: request and response. It's similar to regular APIs where we send data by HTTP channel and (sometimes) receive response.
 
-Because `Connection` uses `socket.io` under the hood, it actually sends socket messages between client and server. By default, we use `connection.event` string for event name. If by some reason you want to change default event name, you still can do this via configuration object:
-
-```javascript
-const connection = new Connection({
-	event: "DEFAULT-EVENT-NAME"
-});
-```
-
 To receive requests from server, set up your configuration:
 
 ```javascript
 const connection = new Connection({
 	// ...
-	onRequest: (data) => {
+	onRequest: (request) => {
 		/*
 			Handle data sent by server.
 		*/
+		let event = request.event;
+		let data = request.data;
 	},
 	// ...
 });
@@ -75,7 +69,7 @@ Also, it's possible to send response immediately:
 ```javascript
 const connection = new Connection({
 	// ...
-	onRequest: (data, respond) => {
+	onRequest: (request, respond) => {
 		respond({
 			text: "Hello server!"
 		});
@@ -87,7 +81,8 @@ const connection = new Connection({
 Sending request from client to server is super simple:
 
 ```javascript
-connection.request({
+connection.send({
+	event: "greeting",
 	data: {
 		text: "Hello server!"
 	},
