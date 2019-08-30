@@ -13,10 +13,15 @@ class IdGenerator {
 
 class Request {
 
+	static getType() {
+		return "raw.request";
+	}
+
 	constructor() {
-		this.type = "request";
+		this.type = Request.getType();
 		this.requestId = "";
 		this.recipientId = undefined;
+		this.event = undefined;
 		this.data = {};
 	}
 }
@@ -32,8 +37,12 @@ class RequestOptions {
 
 class Response {
 
+	static getType() {
+		return "raw.response";
+	}
+
 	constructor() {
-		this.type = "response";
+		this.type = Response.getType();
 		this.requestId = undefined;
 		this.data = {};
 	}
@@ -51,10 +60,9 @@ class ResponseHandler {
 class ConnectionConfiguration {
 
 	constructor() {
-		this.event = undefined;
 		this.onConnected = () => {
 		};
-		this.onRequest = (data, respond) => {
+		this.onRequest = (request, respond) => {
 		};
 		this.onDisconnected = () => {
 		};
@@ -63,7 +71,9 @@ class ConnectionConfiguration {
 
 class Connection {
 
-	static defaultEvent = "connection.event";
+	static getEvent() {
+		return "connection.event";
+	}
 
 	constructor(
 		configuration
@@ -72,7 +82,10 @@ class Connection {
 		this.configuration = configuration;
 		this.responseHandlers = [];
 		this.idGenerator = new IdGenerator();
+		this._setupSocketIO();
+	}
 
+	_setupSocketIO() {
 		this.socket.on(
 			"connect",
 			(data) => {
@@ -83,20 +96,23 @@ class Connection {
 		);
 
 		this.socket.on(
-			this.getEvent(),
+			Connection.getEvent(),
 			(data) => {
 				switch (data.type) {
-					case "request": {
+					case Request.getType(): {
 						/*
 							Получен запрос.
 						*/
-						let request = data;
+						let request = {
+							event: data.event,
+							data: data.data
+						};
 
 						if (this.configuration.onRequest) {
 							this.configuration.onRequest(
 								request.data,
 								(data) => {
-									this.response(
+									this._response(
 										request.requestId,
 										data
 									);
@@ -105,7 +121,7 @@ class Connection {
 						}
 						break;
 					}
-					case "response": {
+					case Response.getType(): {
 						/*
 							Получен ответ на запрос.
 						*/
@@ -143,20 +159,16 @@ class Connection {
 		);
 	}
 
-	getEvent() {
-		return this.configuration.event
-			|| Connection.defaultEvent;
-	}
-
-	request(
+	_request(
 		configuration
 	) {
-		let event = this.getEvent();
+		let event = Connection.getEvent();
 		let requestId = this.idGenerator.getNextId();
 
 		let request = new Request();
 		request.requestId = requestId;
 		request.recipientId = configuration.recipientId;
+		request.event = configuration.event;
 		request.data = configuration.data;
 
 		if (configuration.callback) {
@@ -175,11 +187,11 @@ class Connection {
 		);
 	}
 
-	response(
+	_response(
 		requestId,
 		data
 	) {
-		let event = this.getEvent();
+		let event = Connection.getEvent();
 
 		let response = new Response();
 		response.requestId = requestId;
@@ -188,6 +200,14 @@ class Connection {
 		this.socket.emit(
 			event,
 			response
+		);
+	}
+
+	send(
+		configuration
+	) {
+		this._request(
+			configuration
 		);
 	}
 }
