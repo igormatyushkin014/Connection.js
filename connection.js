@@ -110,7 +110,7 @@ class Connection {
 
 						if (this.configuration.onRequest) {
 							this.configuration.onRequest(
-								request.data,
+								request,
 								(data) => {
 									this._response(
 										request.requestId,
